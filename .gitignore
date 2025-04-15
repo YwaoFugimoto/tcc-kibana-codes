@@ -1,4 +1,4 @@
-bulk_data_insert
-bulk_data
-dados_limpos
-input
+bulk_data_insert.ndjson
+bulk_data.ndjson
+dados_limpos.json   
+input.sql
