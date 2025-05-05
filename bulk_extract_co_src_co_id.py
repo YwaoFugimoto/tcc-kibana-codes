@@ -1,22 +1,43 @@
+#!/usr/bin/env python3
 import json
 from pathlib import Path
 
-arquivo_entrada = Path('data/bulk_data_insert.ndjson')
-arquivo_saida = Path('data/bulk_entrys.ndjson')
+input_path  = Path('data/bulk_data_insert.ndjson')
+output_path = Path('data/bulk_co_id_co_src.ndjson')
 
+with input_path.open('r', encoding='utf-8') as src, \
+     output_path.open('w', encoding='utf-8') as dest:
 
-with open(arquivo_entrada, 'r', encoding='utf-8') as f_in, open(arquivo_saida, 'w', encoding='utf-8') as f_out:
-    for line in f_in:
-        try:
-            doc = json.loads(line.strip())
-            co_src = doc.get("co_src", "")
-
-            f_out.write(json.dumps(co_src, ensure_ascii=False) + '\n')
-        except json.JSONDecodeError:
-
+    for line in src:
+        line = line.strip()
+        if not line:
             continue
 
-print(f"Extração concluída! Todos os campos 'co_src' foram salvos em: {arquivo_saida.resolve()}")
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        # only if both
+        if "co_id" not in record or "co_src" not in record:
+            continue
+
+        co_id  = record["co_id"]
+        co_src = record["co_src"]
+
+        # ignore empty
+        if co_id == "" and co_src == "":
+            continue
+
+        out = {
+            "co_id":  co_id,
+            "co_src": co_src
+        }
+        dest.write(json.dumps(out, ensure_ascii=False) + "\n")
+
+print(f"Extraction done. co_id and co_src saved to: {output_path.resolve()}")
+
+
 
 
 
@@ -26,12 +47,12 @@ print(f"Extração concluída! Todos os campos 'co_src' foram salvos em: {arquiv
 # arquivo_entrada = 'data/bulk_data_insert.ndjson'
 # arquivo_saida = 'data/bulk_entrys.ndjson'
 
-# with open(arquivo_entrada, 'r', encoding='utf-8') as f_in, open(arquivo_saida, 'w', encoding='utf-8') as f_out:
-#     for line in f_in:
+# with open(arquivo_entrada, 'r', encoding='utf-8') as src_file, open(arquivo_saida, 'w', encoding='utf-8') as dest_file:
+#     for line in src_file:
 #         try:
-#             doc = json.loads(line.strip())
-#             f_out.write(json.dumps({"index": {"_index": indice}}) + '\n')
-#             f_out.write(json.dumps(doc) + '\n')
+#             record = json.loads(line.strip())
+#             dest_file.write(json.dumps({"index": {"_index": indice}}) + '\n')
+#             dest_file.write(json.dumps(record) + '\n')
 #         except Exception as e:
 #             print("Erro ao processar linha:", e)
 
@@ -49,8 +70,8 @@ print(f"Extração concluída! Todos os campos 'co_src' foram salvos em: {arquiv
 #                 continue
 #             # tenta decodificar a linha como JSON e extrair o campo co_src
 #             try:
-#                 doc = json.loads(line)
-#                 co_src = doc.get("co_src", "")
+#                 record = json.loads(line)
+#                 co_src = record.get("co_src", "")
 #                 co_src_list.append(co_src)
 #             except json.JSONDecodeError:
 #                 # pula linhas mal formadas
