@@ -3,48 +3,62 @@ import json
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
+# Configurações
+INPUT_PATH   = Path('data/bulk_co_id_co_src.ndjson')    # arquivo de entrada: {"co_id":…, "co_src":…} por linha
+OUTPUT_PATH  = Path('data/bulk_co_id_co_embedded_src.ndjson') # arquivo de saída
+MODEL_NAME   = 'all-MiniLM-L12-v2'
+BATCH_SIZE   = 64     # quantos itens por lote passado ao modelo
+CHUNK_SIZE   = 1024   # quantos itens ler antes de chamar encode (para não estourar memória)
+ID = "_id"
+CONTENT = "content"
 
-input_path = Path('data/bulk_entrys.ndjson')
-output_path = Path('data/bulk_entrys_embedded.ndjson')
 
-model = SentenceTransformer('all-MiniLM-L12-v2')
+# Carrega o modelo
+model = SentenceTransformer(MODEL_NAME)
 
-texts = []
-with open(input_path, 'r', encoding='utf-8') as f_in:
-    for line in f_in:
-        raw = line.strip()
-        if not raw:
+with INPUT_PATH.open('r', encoding='utf-8') as fin, OUTPUT_PATH.open('w', encoding='utf-8') as fout:
+    ids, texts = [], []
+    total = 0
+
+    for line in fin:
+        line = line.strip()
+        if not line:
             continue
         try:
-            text = json.loads(raw)
+            rec = json.loads(line)
         except json.JSONDecodeError:
             continue
-        # Ignora strings vazias
-        if text == "":
+
+        co_id  = rec.get(ID)
+        co_src = rec.get(CONTENT, '')
+        if co_id is None or not co_src:
             continue
-        texts.append(text)
 
-embeddings = model.encode(texts, batch_size=32, show_progress_bar=True)
+        ids.append(co_id)
+        texts.append(co_src)
 
-with open(output_path, 'w', encoding='utf-8') as f_out:
-    for emb in embeddings:
-        record = {
-            "co_embedding": emb.tolist()
-        }
-        f_out.write(json.dumps(record, ensure_ascii=False) + '\n')
+        # Quando acumular CHUNK_SIZE itens, gera os embeddings e escreve
+        if len(texts) >= CHUNK_SIZE:
+            embeddings = model.encode(texts, batch_size=BATCH_SIZE, show_progress_bar=True)
+            for cid, emb in zip(ids, embeddings):
+                out = {
+                    "id": cid,
+                    "embedding": emb.tolist()
+                }
+                fout.write(json.dumps(out, ensure_ascii=False) + "\n")
+            total += len(texts)
+            ids.clear()
+            texts.clear()
 
-print(f"Processo concluído! {len(texts)} textos embutidos salvos em: {output_path.resolve()}")
+    # Processa o restante
+    if texts:
+        embeddings = model.encode(texts, batch_size=BATCH_SIZE, show_progress_bar=True)
+        for cid, emb in zip(ids, embeddings):
+            out = {
+                "id": cid,
+                "embedding": emb.tolist()
+            }
+            fout.write(json.dumps(out, ensure_ascii=False) + "\n")
+        total += len(texts)
 
-
-
-
-# from sentence_transformers import SentenceTransformer
-# from pathlib import Path
-# # from sklearn.metrics.pairwise import cosine_similarity
-# # from pprint import pprint
-
-# model = SentenceTransformer('all-MiniLM-L12-v2')
-
-# entry = Path('data/bulk_entrys.ndjson')
-
-# entry_embedding = model.encode(entry)
+print(f"Processo concluído! {total} embeddings salvos em: {OUTPUT_PATH.resolve()}")
