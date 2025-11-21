@@ -9,6 +9,9 @@ OUTPUT_PATH  = Path('data/bulk_co_id_co_embedded_src.ndjson') # arquivo de saíd
 MODEL_NAME   = 'all-MiniLM-L12-v2'
 BATCH_SIZE   = 64     # quantos itens por lote passado ao modelo
 CHUNK_SIZE   = 1024   # quantos itens ler antes de chamar encode (para não estourar memória)
+ID = "_id"
+CONTENT = "content"
+
 
 # Carrega o modelo
 model = SentenceTransformer(MODEL_NAME)
@@ -26,8 +29,8 @@ with INPUT_PATH.open('r', encoding='utf-8') as fin, OUTPUT_PATH.open('w', encodi
         except json.JSONDecodeError:
             continue
 
-        co_id  = rec.get('co_id')
-        co_src = rec.get('co_src', '')
+        co_id  = rec.get(ID)
+        co_src = rec.get(CONTENT, '')
         if co_id is None or not co_src:
             continue
 
@@ -39,8 +42,8 @@ with INPUT_PATH.open('r', encoding='utf-8') as fin, OUTPUT_PATH.open('w', encodi
             embeddings = model.encode(texts, batch_size=BATCH_SIZE, show_progress_bar=True)
             for cid, emb in zip(ids, embeddings):
                 out = {
-                    "co_id": cid,
-                    "co_embedded_src": emb.tolist()
+                    "id": cid,
+                    "embedding": emb.tolist()
                 }
                 fout.write(json.dumps(out, ensure_ascii=False) + "\n")
             total += len(texts)
@@ -52,8 +55,8 @@ with INPUT_PATH.open('r', encoding='utf-8') as fin, OUTPUT_PATH.open('w', encodi
         embeddings = model.encode(texts, batch_size=BATCH_SIZE, show_progress_bar=True)
         for cid, emb in zip(ids, embeddings):
             out = {
-                "co_id": cid,
-                "co_embedded_src": emb.tolist()
+                "id": cid,
+                "embedding": emb.tolist()
             }
             fout.write(json.dumps(out, ensure_ascii=False) + "\n")
         total += len(texts)

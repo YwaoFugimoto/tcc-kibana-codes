@@ -13,7 +13,7 @@ with EMBED_PATH.open('r', encoding='utf-8') as f_emb:
     for line in f_emb:
         try:
             rec = json.loads(line)
-            cid = rec.get('co_id')
+            cid = rec.get(ID)
             emb = rec.get('co_embedded_src')
             if cid is not None and emb is not None:
                 emb_map[cid] = emb
@@ -31,7 +31,7 @@ with ORIG_PATH.open('r', encoding='utf-8') as f_in, \
         except json.JSONDecodeError:
             continue
 
-        cid = obj.get('co_id')
+        cid = obj.get(ID)
         if cid in emb_map:
             obj['co_embedded_src'] = emb_map[cid]
             count += 1
