@@ -1,0 +1,100 @@
+get /math_articles/_search
+
+get /math_articles/_count
+
+============================
+
+get /math_articles/_search
+
+get /math_articles_old/_search
+
+get /math_articles/_count
+
+get /math_articles/_settings
+
+get /math_articles/_mapping
+
+get /math_articles_old/_mapping
+
+POST /_reindex?wait_for_completion=false
+{
+  "source": {
+    "index": "math_articles"
+  },
+  "dest": {
+    "index": "math_articles_old"
+  }
+}
+
+
+get /_tasks/rlzh1o7BT1mmX7ROXvuxlg:236377
+
+put /math_articles_old
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0, 
+    "index.mapping.coerce": false,
+    "analysis": {
+      "analyzer": {
+        "analyzer_for_content": {
+          "type": "custom",
+          "char_filter": [ ],
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "snowball"
+          ]
+        }
+      }
+    }
+  }, "mappings": {
+      "properties": {
+        "co_abstract": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "co_id": {
+          "type": "long"
+        },
+        "co_math": {
+          "type": "long"
+        },
+        "co_src": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "co_title": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "co_url": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    }
+}
+
+
