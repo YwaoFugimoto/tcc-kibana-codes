@@ -3,3 +3,7 @@ bulk_data.ndjson
 dados_limpos.json   
 input.sql
 .venv
+.json
+.ndjson
+.txt
+.sql

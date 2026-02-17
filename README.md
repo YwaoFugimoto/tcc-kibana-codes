@@ -259,3 +259,12 @@ para funcionar ambos endpoints é necessario:
 - token_service (codigo JAVA) estar rodando porta 8080
 
 - elasticsSearch (docker compose de kibana-tcc) estar rodando, para fazer a hit.
+
+
+
+### Faz embedding da entrada e procura
+GET http://localhost:3000/search-formula?formula=(p(x) = \frac{1}{\sigma \sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}})&mode=DIRECT
+
+
+### Tokeniza a entrada, faz embedding da entrada e procura 
+GET http://localhost:3000/search-formula?formula=(p(x) = \frac{1}{\sigma \sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}})&mode=TOKENIZED
